@@ -7,14 +7,14 @@ version: '3.6'
 
 # html5 templates
 x-html5-backend: &html5backend
-  build: 
+  build:
     context: mod/html5
     additional_contexts:
       - source=./repos/bigbluebutton/bigbluebutton-html5
     args:
       BBB_BUILD_TAG: bbb27-2023-06-13-java17
       TAG_BBB: {{ .Env.TAG_BBB }}
-  image: alangecker/bbb-docker-html5:{{ .Env.TAG_BBB }}
+  image: destinyakpo/bbb-docker-html5:{{ .Env.TAG_BBB }}
   restart: unless-stopped
   depends_on:
     - redis
@@ -44,7 +44,7 @@ x-html5-frontend: &html5frontend
 
 services:
   bbb-web:
-    build: 
+    build:
       context: mod/bbb-web
       additional_contexts:
         - src-web=./repos/bigbluebutton/bigbluebutton-web
@@ -52,7 +52,7 @@ services:
         - src-common-web=./repos/bigbluebutton/bbb-common-web
       args:
         BBB_BUILD_TAG: bbb27-2023-06-13-java17
-    image: alangecker/bbb-docker-web:{{ .Env.TAG_BBB }}
+    image: destinyakpo/bbb-docker-web:{{ .Env.TAG_BBB }}
     restart: unless-stopped
     depends_on:
         - redis
@@ -108,7 +108,7 @@ services:
 
   freeswitch:
     container_name: bbb-freeswitch
-    build: 
+    build:
       context: mod/freeswitch
       additional_contexts:
         - freeswitch=./repos/freeswitch/
@@ -116,7 +116,7 @@ services:
         - fs-config=./repos/bigbluebutton/bbb-voice-conference/config/freeswitch/conf/
       args:
         BBB_BUILD_TAG: bbb27-2023-06-13-java17
-    image: alangecker/bbb-docker-freeswitch:{{ .Env.TAG_FREESWITCH }}-{{ .Env.TAG_BBB }}
+    image: destinyakpo/bbb-docker-freeswitch:{{ .Env.TAG_FREESWITCH }}-{{ .Env.TAG_BBB }}
     restart: unless-stopped
     cap_add:
       - IPC_LOCK
@@ -155,7 +155,7 @@ services:
         - src-playback=./repos/bbb-playback
       args:
         BBB_BUILD_TAG: bbb27-2023-06-13-java17
-    image: alangecker/bbb-docker-nginx:1.23-{{ .Env.TAG_PLAYBACK }}-{{ .Env.TAG_BBB }}
+    image: destinyakpo/bbb-docker-nginx:1.23-{{ .Env.TAG_PLAYBACK }}-{{ .Env.TAG_BBB }}
     restart: unless-stopped
     depends_on:
       - etherpad
@@ -175,14 +175,14 @@ services:
       - "greenlight:10.7.7.21"
 
   etherpad:
-    build: 
+    build:
       context: mod/etherpad
       additional_contexts:
         - plugin=./repos/bbb-etherpad-plugin
         - skin=./repos/bbb-etherpad-skin
       args:
         TAG_ETHERPAD: "1.9.1"
-    image: alangecker/bbb-docker-etherpad:1.9.1-s{{ .Env.COMMIT_ETHERPAD_SKIN }}-p{{ .Env.COMMIT_ETHERPAD_PLUGIN }}
+    image: destinyakpo/bbb-docker-etherpad:1.9.1-s{{ .Env.COMMIT_ETHERPAD_SKIN }}-p{{ .Env.COMMIT_ETHERPAD_PLUGIN }}
     restart: unless-stopped
     depends_on:
       - redis
@@ -193,11 +193,11 @@ services:
         ipv4_address: 10.7.7.4
 
   bbb-pads:
-    build: 
+    build:
       context: mod/bbb-pads
       additional_contexts:
         - src=./repos/bbb-pads
-    image: alangecker/bbb-docker-pads:{{ .Env.TAG_PADS }}
+    image: destinyakpo/bbb-docker-pads:{{ .Env.TAG_PADS }}
     restart: unless-stopped
     depends_on:
       - redis
@@ -246,13 +246,13 @@ services:
       - vol-kurento:/var/kurento
 
   webrtc-sfu:
-    build: 
+    build:
       context: mod/webrtc-sfu
       additional_contexts:
         - source=./repos/bbb-webrtc-sfu
       args:
         BBB_BUILD_TAG: bbb27-2023-06-13-java17
-    image: alangecker/bbb-docker-webrtc-sfu:{{ .Env.TAG_WEBRTC_SFU }}
+    image: destinyakpo/bbb-docker-webrtc-sfu:{{ .Env.TAG_WEBRTC_SFU }}
     restart: unless-stopped
     depends_on:
       - redis
@@ -282,7 +282,7 @@ services:
     network_mode: host
 
   fsesl-akka:
-    build: 
+    build:
       context: mod/fsesl-akka
       additional_contexts:
         - src-common-message=./repos/bigbluebutton/bbb-common-message
@@ -290,7 +290,7 @@ services:
         - src-fsesl-akka=./repos/bigbluebutton/akka-bbb-fsesl
       args:
         BBB_BUILD_TAG: bbb27-2023-06-13-java17
-    image: alangecker/bbb-docker-fsesl-akka:{{ .Env.TAG_BBB }}
+    image: destinyakpo/bbb-docker-fsesl-akka:{{ .Env.TAG_BBB }}
     restart: unless-stopped
     depends_on:
       - redis
@@ -302,14 +302,14 @@ services:
         ipv4_address: 10.7.7.14
 
   apps-akka:
-    build: 
+    build:
       context: mod/apps-akka
       additional_contexts:
         - src-common-message=./repos/bigbluebutton/bbb-common-message
         - src-apps-akka=./repos/bigbluebutton/akka-bbb-apps
       args:
         BBB_BUILD_TAG: bbb27-2023-06-13-java17
-    image: alangecker/bbb-docker-apps-akka:{{ .Env.TAG_BBB }}
+    image: destinyakpo/bbb-docker-apps-akka:{{ .Env.TAG_BBB }}
     restart: unless-stopped
     depends_on:
       - redis
@@ -324,7 +324,7 @@ services:
 
   jodconverter:
     build: mod/jodconverter
-    image: alangecker/bbb-docker-jodconverter:latest
+    image: destinyakpo/bbb-docker-jodconverter:latest
     security_opt:
       - 'no-new-privileges:true'
     restart: unless-stopped
@@ -340,7 +340,7 @@ services:
 
   periodic:
     build: mod/periodic
-    image: alangecker/bbb-docker-periodic:v2.7.0
+    image: destinyakpo/bbb-docker-periodic:v2.7.0
     restart: unless-stopped
     depends_on:
       - mongodb
@@ -361,7 +361,7 @@ services:
 {{ if isTrue .Env.ENABLE_RECORDING }}
   # recordings
   recordings:
-    build: 
+    build:
       context: mod/recordings
       additional_contexts:
         - record-core=./repos/bigbluebutton/record-and-playback/core
@@ -370,7 +370,7 @@ services:
       args:
         BBB_BUILD_TAG: bbb27-2023-06-13-java17
         TAG_BBB_PRESENTATION_VIDEO: "4.0.3"
-    image: alangecker/bbb-docker-recordings:{{ .Env.TAG_BBB }}
+    image: destinyakpo/bbb-docker-recordings:{{ .Env.TAG_BBB }}
     restart: unless-stopped
     depends_on:
       - redis
@@ -394,11 +394,11 @@ services:
 {{ if isTrue .Env.ENABLE_WEBHOOKS }}
   # webhooks
   webhooks:
-    build: 
+    build:
       context: mod/webhooks
       additional_contexts:
         - src=./repos/bbb-webhooks
-    image: alangecker/bbb-docker-webhooks:{{ .Env.TAG_WEBHOOKS }}
+    image: destinyakpo/bbb-docker-webhooks:{{ .Env.TAG_WEBHOOKS }}
     restart: unless-stopped
     environment:
       DOMAIN: ${DOMAIN}
