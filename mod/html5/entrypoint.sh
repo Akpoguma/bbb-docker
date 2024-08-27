@@ -2,8 +2,8 @@
 set -e
 
 cd /app
-export MONGO_OPLOG_URL="mongodb://127.0.0.1:27017/local"
-export MONGO_URL="mongodb://127.0.0.1:27017/meteor"
+export MONGO_OPLOG_URL="mongodb://${MONGO_OPLOG_URL}/local"
+export MONGO_URL="mongodb://${MONGO_URL}/meteor"
 export ROOT_URL=http://127.0.0.1/html5client
 export NODE_ENV=production
 export SERVER_WEBSOCKET_COMPRESSION='{"level":5, "maxWindowBits":13, "memLevel":7, "requestMaxWindowBits":13}'
