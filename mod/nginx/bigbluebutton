@@ -1,47 +1,45 @@
 map $remote_addr $freeswitch_addr {
     "~:"    [::1];
-    default    10.7.7.1;
+    default    127.0.0.1;
 }
 
 upstream poolhtml5servers {
   zone poolhtml5servers 32k;
   least_conn;
-  server 10.7.7.200:4100 fail_timeout=10s max_fails=4 backup;
-  server 10.7.7.201:4101 fail_timeout=120s max_fails=1;
-  server 10.7.7.202:4102 fail_timeout=120s max_fails=1;
-  server 10.7.7.203:4103 fail_timeout=120s max_fails=1;
-  # TODO: set server list based on NUMBER_OF_FRONTEND_NODEJS_PROCESSES
-  # server 10.7.7.204:4104 fail_timeout=120s max_fails=1;
-  # server 10.7.7.205:4105 fail_timeout=120s max_fails=1;
-  # server 10.7.7.206:4106 fail_timeout=120s max_fails=1;
-  # server 10.7.7.207:4107 fail_timeout=120s max_fails=1;
+  server 127.0.0.1:4100 fail_timeout=10s max_fails=4 backup;
+  server 127.0.0.1:4101 fail_timeout=120s max_fails=1;
+  server 127.0.0.1:4102 fail_timeout=120s max_fails=1;
+  server 127.0.0.1:4103 fail_timeout=120s max_fails=1;
+  server 127.0.0.1:4104 fail_timeout=120s max_fails=1;
+  server 127.0.0.1:4105 fail_timeout=120s max_fails=1;
+  server 127.0.0.1:4106 fail_timeout=120s max_fails=1;
+  server 127.0.0.1:4107 fail_timeout=120s max_fails=1;
 }
 
 server {
-  listen 48087 default_server;
-  listen [::]:48087 default_server;
+  listen 8080 default_server;
+  listen [::]:8080 default_server;
   server_name _;
   access_log /dev/stdout;
   absolute_redirect off;
   root /www/;
-  
+  location = /default.pdf {
+    root /etc/nginx/bbb/;
+  }
   # opt-out of google's floc tracking
   # https://www.eff.org/deeplinks/2021/03/googles-floc-terrible-idea
   add_header Permissions-Policy "interest-cohort=()";
+  proxy_cookie_path ~^/ "/; SameSite=None; HTTPOnly; Secure";
 
+  # redirect to greenlight
+  location = / {
+      return 302 /b;
+  }
 
   # Include specific rules for record and playback
   include /etc/nginx/bbb/*.nginx;
 
-  # redirect old greenlight v2 room links
-  location ~ "/b/([a-z0-9\-]+)" {
-    return 302 /rooms/$1;
-  }
-
-  # serve default.pdf from /www/
-  location = /default.pdf {
-    try_files $uri =404;
-  }
+}
 
   location / {
     proxy_pass          http://greenlight:3000;
