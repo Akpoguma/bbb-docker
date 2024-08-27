@@ -26,7 +26,7 @@ fi
 
 # if container is the first frontend, do some additional tasks
 if [ "$BBB_HTML5_ROLE" == "frontend" ] && [ "$INSTANCE_ID" == "1" ]; then
-    # delete potential old settings.yml
+
 
     # copy static files into volume for direct access by nginx
     # https://github.com/bigbluebutton/bigbluebutton/issues/10739
@@ -37,8 +37,7 @@ if [ "$BBB_HTML5_ROLE" == "frontend" ] && [ "$INSTANCE_ID" == "1" ]; then
 
 fi
 
-rm -f /app/programs/server/assets/app/config/settings.yml
 dockerize \
-    -template /app/programs/server/assets/app/config/settings.yml.tmpl:/app/programs/server/assets/app/config/settings.yml \
-    su-exec meteor \
+    -template /app/bbb-html5.yml.tmpl:/app/bbb-html5.yml \
+    gosu meteor \
         node --max-old-space-size=2048 --max_semi_space_size=128 main.js $PARAM
