@@ -3,13 +3,13 @@ export MONGO_OPLOG_URL="mongodb://127.0.0.1:27017/local"
 export MONGO_URL="mongodb://127.0.0.1:27017/meteor"
 export ROOT_URL=http://127.0.0.1/html5client
 export NODE_ENV=production
-export SERVER_WEBSOCKET_COMPRESSION=0
-export BIND_IP=127.0.0.1
+export SERVER_WEBSOCKET_COMPRESSION='{"level":5, "maxWindowBits":13, "memLevel":7, "requestMaxWindowBits":13}'
+export BIND_IP=0.0.0.0
 export LANG=en_US.UTF-8
 export INSTANCE_MAX=1
 export ENVIRONMENT_TYPE=production
-export NODE_VERSION=node-v12.16.1-linux-x64
-export DOMAIN=${HOSTNAME}.yourdomain.com
+export NODE_VERSION=node-v14.21.1-linux-x64
+export BBB_HTML5_LOCAL_SETTINGS=/app/bbb-html5.yml
 
 if [ "$DEV_MODE" == true ]; then
     echo "DEV_MODE=true, disable TLS certificate rejecting"
