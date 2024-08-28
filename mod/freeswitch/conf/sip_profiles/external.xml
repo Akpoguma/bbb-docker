@@ -52,7 +52,7 @@
          for presence.
     -->
     <!-- Name of the db to use for this profile -->
-    <param name="dbname" value="sqlite://memory://file:external?mode=memory&amp;cache=shared"/>
+    <!--<param name="dbname" value="share_presence"/>-->
     <!--<param name="presence-hosts" value="$${domain}"/>-->
     <!--<param name="force-register-domain" value="$${domain}"/>-->
     <!--all inbound reg will stored in the db using this domain -->
@@ -114,7 +114,7 @@
     <!-- TLS version ("sslv23" (default), "tlsv1"). NOTE: Phones may not work with TLSv1 -->
     <param name="tls-version" value="$${sip_tls_version}"/>
     <param name="ws-binding"  value="0.0.0.0:5066"/>
-    <param name="wss-binding"  value="$${local_ip_v4}:7443"/>
+    <param name="wss-binding"  value="127.0.0.1:7443"/>
     
 
     <!-- enable rtcp on every channel also can be done per leg basis with rtcp_audio_interval_msec variable set to passthru to pass it across a call-->
