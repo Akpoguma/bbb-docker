@@ -152,7 +152,7 @@
    *    "ip": "",                             // <-- has to be an empty string
    *    "port" : "/somepath/etherpad.socket", // <-- path to a Unix socket
    */
-  "ip": "0.0.0.0",
+  "ip": "127.0.0.1",
   "port": 9001,
 
   /*
