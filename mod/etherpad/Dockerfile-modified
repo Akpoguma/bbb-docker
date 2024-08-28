@@ -1,6 +1,0 @@
-FROM destinyakpo/bbb-docker_etherpad:2.3
-
-COPY settings.json /opt/etherpad-lite/settings.json
-COPY etherpad-export.sh /etherpad-export.sh
-COPY  entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]

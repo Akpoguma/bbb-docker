@@ -1,58 +1,71 @@
-FROM debian:buster-slim
+ARG BBB_BUILD_TAG
+FROM bigbluebutton/bbb-build:$BBB_BUILD_TAG AS builder
 
-# add freeswitch repo
+COPY --from=freeswitch / /build/freeswitch
+
+# install most recent git version for proper sparse-checkout support
+# https://stackoverflow.com/questions/72223738/failed-to-initialize-sparse-checkout
+RUN echo 'deb https://ppa.launchpadcontent.net/git-core/ppa/ubuntu focal main' > /etc/apt/sources.list.d/git-core-ppa.list && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A1715D88E1DF1F24 && \
+    apt-get update && \
+    apt-get install -y git
+
+# get build files for bbb-freeswitch (build/packages-template/bbb-freeswitch-core/)
+COPY --from=build-files / /build/
+
+# mock files expected by build.sh
+RUN mkdir -p /build/bbb-voice-conference/config/freeswitch/conf/ && \
+    touch \
+        /build/opts-build.sh \
+        /build/freeswitch.service.build \
+        /build/bbb-voice-conference/config/freeswitch/conf/a \
+        && \
+    echo "" > /usr/local/bin/fpm
+
+# build freeswitch
+RUN cd /build && ./build.sh
+
+
+# add english sounds
+RUN mkdir -p /build/staging/opt/freeswitch/share/freeswitch && \
+    wget http://bigbluebutton.org/downloads/sounds.tar.gz -O sounds.tar.gz && \
+    tar xvfz sounds.tar.gz -C /build/staging/opt/freeswitch/share/freeswitch && \
+    wget https://gitlab.senfcall.de/senfcall-public/mute-and-unmute-sounds/-/archive/master/mute-and-unmute-sounds-master.zip && \
+    unzip mute-and-unmute-sounds-master.zip && \
+    cd mute-and-unmute-sounds-master/sounds && \
+    find . -name "*.wav" -exec /bin/bash -c "sox -v 0.3  {} /tmp/tmp.wav; cp /tmp/tmp.wav /build/staging/opt/freeswitch/share/freeswitch/sounds/en/us/callie/conference/{}" \;
+
+# add bigblugbutton config
+ARG TAG_FS_CONFIG
+COPY --from=fs-config / /build/staging/opt/freeswitch/etc/freeswitch/
+
+# ===============================================
+
+# we are using ubuntu here, because libjpeg8 is required, but not available in debian
+FROM ubuntu:20.04
 RUN apt-get update && \
-apt-get install -y --no-install-recommends subversion curl wget ca-certificates gnupg gnupg2 lsb-release unzip && \
-curl -k https://files.freeswitch.org/repo/deb/debian-release/fsstretch-archive-keyring.asc | apt-key add - && \
-echo 'deb http://files.freeswitch.org/repo/deb/debian-release/ buster main' > /etc/apt/sources.list.d/freeswitch.list
+    apt-get install -y \
+        xmlstarlet wget iptables curl \
+        libfreetype6 libcurl4 libspeex1 libspeexdsp1 libopus0 libsndfile1 libopusfile0 liblua5.2-0 libjbig0 libldns2 libedit2 libtiff5 libpng16-16 \
+    && \
+# install libopusenc0
+    wget -O /tmp/libopusenc0_0.2.1-1bbb2_amd64.deb https://launchpad.net/~bigbluebutton/+archive/ubuntu/support/+files/libopusenc0_0.2.1-1bbb2_amd64.deb \
+    && dpkg -i /tmp/libopusenc0_0.2.1-1bbb2_amd64.deb \
+    && rm /tmp/libopusenc0_0.2.1-1bbb2_amd64.deb
 
-# install dockerize
-ENV DOCKERIZE_VERSION v0.6.1
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+# add dockerize
+COPY --from=alangecker/bbb-docker-base-java /usr/local/bin/dockerize /usr/local/bin/dockerize
 
-# install freeswitch
-RUN apt-get update && apt-get install -y \
-        freeswitch \
-        freeswitch-mod-commands \
-        freeswitch-mod-conference \
-        freeswitch-mod-console \
-        freeswitch-mod-dialplan-xml \
-        freeswitch-mod-dptools \
-        freeswitch-mod-event-socket \
-        freeswitch-mod-native-file \
-        freeswitch-mod-opusfile \
-        freeswitch-mod-opus \
-        freeswitch-mod-sndfile \
-        freeswitch-mod-sofia \
-        freeswitch-sounds-en-us-callie \
-        iptables
+# copy over built freeswitch & config
+COPY --from=builder /build/staging/opt /opt
+COPY --from=builder /build/staging/etc /etc
 
-
-# -- get official bbb freeswitch config
-# we use svn for retrieving the files since the repo is quite large,
-# git sparse-checkout is not yet available with buster and there
-# is no other sane way of downloading a single directory via git
-
-ENV TAG v2.3.0
-RUN svn checkout https://github.com/bigbluebutton/bigbluebutton/tags/$TAG/bbb-voice-conference/config/freeswitch/conf /etc/freeswitch \
-    && rm -rf /etc/freeswitch/.svn
-
-# the current available freeswitch-mod-opusfile is broken,
-# it can't write any .opus files. The fix provided in
-# https://github.com/signalwire/freeswitch/pull/719/files
-# is not sufficient as the module still comes without opus
-# write support, so we rather switch to the binary built
-# by bigbluebutton and add its dependencies
-RUN wget -O /usr/lib/freeswitch/mod/mod_opusfile.so https://github.com/bbb-pkg/bbb-freeswitch-core/raw/43f3a47af1fcf5ea559e16bb28b900c925a7f2c3/opt/freeswitch/lib/freeswitch/mod/mod_opusfile.so \
-    && wget -O /tmp/libopusenc0_0.2.1-1bbb1_amd64.deb https://launchpad.net/~bigbluebutton/+archive/ubuntu/support/+files/libopusenc0_0.2.1-1bbb1_amd64.deb \
-    && dpkg -i /tmp/libopusenc0_0.2.1-1bbb1_amd64.deb \
-    && rm /tmp/libopusenc0_0.2.1-1bbb1_amd64.deb
-
-# add modifications
-COPY ./conf /etc/freeswitch/
-
+RUN ldconfig && \
+    ln -s /opt/freeswitch/conf /etc/freeswitch && \
+    groupadd freeswitch && \
+    useradd --home-dir /opt/freeswitch --shell /usr/sbin/nologin -g freeswitch freeswitch
 
 COPY ./entrypoint.sh /entrypoint.sh
+COPY ./conf /etc/freeswitch/
+
 ENTRYPOINT /entrypoint.sh

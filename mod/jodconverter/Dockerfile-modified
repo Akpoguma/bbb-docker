@@ -1,2 +1,0 @@
-FROM destinyakpo/bbb-docker_jodconverter:2.3
-COPY ./application.properties /etc/app/application.properties

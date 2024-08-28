@@ -13,18 +13,17 @@ mkdir -p /var/bigbluebutton/recording/status/ended
 mkdir -p /var/bigbluebutton/recording/status/published
 mkdir -p /var/bigbluebutton/captions/inbox
 mkdir -p /var/bigbluebutton/published
+mkdir -p /var/bigbluebutton/published/notes
 mkdir -p /var/bigbluebutton/deleted
 mkdir -p /var/bigbluebutton/unpublished
 chown -R bigbluebutton:bigbluebutton /var/bigbluebutton
 
 echo "$NUMBER_OF_BACKEND_NODEJS_PROCESSES" > /tmp/NUMBER_OF_BACKEND_NODEJS_PROCESSES
 
-export DOMAIN=${HOSTNAME}.srv02.bbb.t-assets.de
-
 cd /usr/share/bbb-web/
 dockerize \
     -template /etc/bigbluebutton/bbb-web.properties.tmpl:/etc/bigbluebutton/bbb-web.properties \
     -template /usr/share/bbb-web/WEB-INF/classes/spring/turn-stun-servers.xml.tmpl:/usr/share/bbb-web/WEB-INF/classes/spring/turn-stun-servers.xml \
-    gosu bigbluebutton java -Dgrails.env=prod -Dserver.address=0.0.0.0 -Dserver.port=8090 -Xms384m -Xmx384m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/bigbluebutton/diagnostics -cp WEB-INF/lib/*:/:WEB-INF/classes/:. org.springframework.boot.loader.WarLauncher
+    gosu bigbluebutton java -Dgrails.env=prod -Dserver.address=0.0.0.0 -Dserver.port=8090 -Dspring.main.allow-circular-references=true -Xms384m -Xmx384m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/bigbluebutton/diagnostics -cp WEB-INF/lib/*:/:WEB-INF/classes/:. org.springframework.boot.loader.WarLauncher
 
 

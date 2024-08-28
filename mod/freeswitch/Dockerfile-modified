@@ -1,8 +1,0 @@
-FROM destinyakpo/bbb-docker_freeswitch:2.3
-
-# add modifications
-COPY ./conf /etc/freeswitch/
-
-
-COPY ./entrypoint.sh /entrypoint.sh
-ENTRYPOINT /entrypoint.sh
