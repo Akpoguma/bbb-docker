@@ -2,4 +2,5 @@
 
 # https://github.com/bigbluebutton/bigbluebutton/pull/9597/files
 
-docker exec -it bbb-freeswitch fs_cli -H 10.7.7.1 -P 8021 -x 'fsctl sync_clock_when_idle'
+CONTAINER_ID=$(docker ps | grep freeswitch | awk '{print $1}')
+docker exec -it $CONTAINER_ID fs_cli -H 127.0.0.1 -P 8021 -x 'fsctl sync_clock_when_idle'

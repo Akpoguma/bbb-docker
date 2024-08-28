@@ -1,16 +1,29 @@
-ARG BBB_BUILD_TAG
-FROM bigbluebutton/bbb-build:$BBB_BUILD_TAG AS builder
+FROM mozilla/sbt:8u181_1.2.7 AS builder
 
-COPY --from=src-common-message / /bbb-common-message
+RUN apt-get update && apt-get install -y subversion
 
-# build bbb-common-message
-RUN cd /bbb-common-message && ./deploy.sh
+# download bbb-common-message
+ENV TAG_COMMON_MESSAGE v2.3.0
+RUN svn checkout https://github.com/bigbluebutton/bigbluebutton/tags/$TAG_COMMON_MESSAGE/bbb-common-message /bbb-common-message \
+    && rm -rf /bbb-common-message/.svn
+
+# compile bbb-common-message
+RUN cd /bbb-common-message \
+ && ./deploy.sh 
+
 
 # ===================================================
-COPY --from=src-fsesl-client / /bbb-fsesl-client
-RUN cd /bbb-fsesl-client && ./deploy.sh
+ENV TAG_FSESL v2.3.0
+RUN svn checkout https://github.com/bigbluebutton/bigbluebutton/tags/$TAG_FSESL/bbb-fsesl-client /bbb-fsesl-client \
+    && rm -rf /bbb-fsesl-client/.svn
 
-COPY --from=src-fsesl-akka / /source
+RUN cd /bbb-fsesl-client \
+    && ./deploy.sh
+
+
+ENV TAG v2.3.0
+RUN svn checkout https://github.com/bigbluebutton/bigbluebutton/tags/$TAG/akka-bbb-fsesl /source \
+    && rm -rf /source/.svn
 
 # compile and unzip bin
 RUN cd /source \
@@ -19,12 +32,25 @@ RUN unzip /source/target/universal/bbb-fsesl-akka-0.0.2.zip -d /
 
 # # ===================================================
 
-FROM alangecker/bbb-docker-base-java
+FROM openjdk:8-jre-slim-buster
+
+RUN apt update && apt-get install -y wget gosu
+
+# install dockerize
+ENV DOCKERIZE_VERSION v0.6.1
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+
+
+RUN groupadd -g 1007 fsesl-akka \
+    && useradd -m -u 1007 -g fsesl-akka fsesl-akka
 
 COPY --from=builder /bbb-fsesl-akka-0.0.2 /bbb-fsesl-akka
 COPY bbb-fsesl-akka.conf /etc/bigbluebutton/bbb-fsesl-akka.conf.tmpl
 COPY logback.xml /bbb-fsesl-akka/conf/logback.xml
-COPY entrypoint.sh /entrypoint.sh
 
-USER bigbluebutton
-ENTRYPOINT /entrypoint.sh
+WORKDIR /bbb-fsesl-akka
+CMD dockerize \
+    -template /etc/bigbluebutton/bbb-fsesl-akka.conf.tmpl:/etc/bigbluebutton/bbb-fsesl-akka.conf \
+    gosu fsesl-akka /bbb-fsesl-akka/bin/bbb-fsesl-akka
