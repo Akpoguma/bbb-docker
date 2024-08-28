@@ -1,8 +1,12 @@
+
 #!/bin/sh
 set -e
 
 
 host=${HOSTNAME:-$(hostname -f)}
+
+
+
 
 # init replset with defaults
 mongo local --eval "rs.initiate({

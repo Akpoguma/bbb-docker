@@ -1,5 +1,0 @@
-FROM destinyakpo/bbb-docker_nginx:2.3
-COPY ./default.pdf /www/default.pdf
-COPY ./bbb /etc/nginx/bbb
-COPY ./bigbluebutton /etc/nginx/conf.d/default.conf
-COPY ./nginx.conf /etc/nginx/nginx.conf
